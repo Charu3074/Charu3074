@@ -103,6 +103,20 @@ jobs:
           echo "  }" >> continuous_visit_puppeteer.js
           echo "}" >> continuous_visit_puppeteer.js
           
+          echo "async function fetchIPsAndVisit() {" >> continuous_visit_puppeteer.js
+          echo "  const endTime = Date.now() + 5 * 60 * 60 * 1000;" >> continuous_visit_puppeteer.js
+          echo "  await fetchIP(false);" >> continuous_visit_puppeteer.js
+          echo "  await fetchIPWithTorRetry();" >> continuous_visit_puppeteer.js
+          echo "  while (Date.now() < endTime) {" >> continuous_visit_puppeteer.js
+          echo "    execSync('sudo service tor start');" >> continuous_visit_puppeteer.js
+          echo "    console.log('Tor started before visiting the website.');" >> continuous_visit_puppeteer.js
+          echo "    await fetchIP(true);" >> continuous_visit_puppeteer.js
+          echo "    await visitWebsite('https://dileepa11.netlify.app');" >> continuous_visit_puppeteer.js
+          echo "    await randomWait();" >> continuous_visit_puppeteer.js
+          echo "  }" >> continuous_visit_puppeteer.js
+          echo "  console.log('Completed 5-hour cycle, stopping now.');" >> continuous_visit_puppeteer.js
+          echo "}" >> continuous_visit_puppeteer.js
+          
           echo "fetchIPsAndVisit();" >> continuous_visit_puppeteer.js
 
       - name: Run Puppeteer Script
