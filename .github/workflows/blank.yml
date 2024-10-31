@@ -41,16 +41,18 @@ jobs:
           echo "const puppeteer = require('puppeteer');" > continuous_visit_puppeteer.js
           echo "const { execSync } = require('child_process');" >> continuous_visit_puppeteer.js
           echo "" >> continuous_visit_puppeteer.js
-          
+
+          # Random wait duration function
           echo "function randomVisitDuration() {" >> continuous_visit_puppeteer.js
           echo "  return Math.floor(Math.random() * (10 - 5 + 1) + 5) * 60 * 1000;" >> continuous_visit_puppeteer.js
           echo "}" >> continuous_visit_puppeteer.js
           
+          # Fetch IP function
           echo "async function fetchIP(proxy = false) {" >> continuous_visit_puppeteer.js
           echo "  const args = proxy ? ['--proxy-server=socks5://127.0.0.1:9050'] : [];" >> continuous_visit_puppeteer.js
           echo "  const browser = await puppeteer.launch({" >> continuous_visit_puppeteer.js
           echo "    headless: true," >> continuous_visit_puppeteer.js
-          echo "    args: ['--no-sandbox', '--disable-setuid-sandbox', '--incognito', '--js-flags=--optimize-for-size --max-old-space-size=2048', ...args]" >> continuous_visit_puppeteer.js
+          echo "    args: ['--no-sandbox', '--disable-setuid-sandbox', '--incognito', ...args]" >> continuous_visit_puppeteer.js
           echo "  });" >> continuous_visit_puppeteer.js
           echo "  const page = await browser.newPage();" >> continuous_visit_puppeteer.js
           echo "  try {" >> continuous_visit_puppeteer.js
@@ -66,6 +68,7 @@ jobs:
           echo "  }" >> continuous_visit_puppeteer.js
           echo "}" >> continuous_visit_puppeteer.js
           
+          # Restart Tor function
           echo "async function restartTor() {" >> continuous_visit_puppeteer.js
           echo "  console.log('Restarting Tor...');" >> continuous_visit_puppeteer.js
           echo "  execSync('sudo service tor stop');" >> continuous_visit_puppeteer.js
@@ -74,6 +77,7 @@ jobs:
           echo "  await new Promise(resolve => setTimeout(resolve, 30000));" >> continuous_visit_puppeteer.js
           echo "}" >> continuous_visit_puppeteer.js
           
+          # Visit website function
           echo "async function visitWebsite(url) {" >> continuous_visit_puppeteer.js
           echo "  const maxRetries = 100;" >> continuous_visit_puppeteer.js
           echo "  let attempt = 0;" >> continuous_visit_puppeteer.js
@@ -81,7 +85,7 @@ jobs:
           echo "  while (!pageLoaded && attempt < maxRetries) {" >> continuous_visit_puppeteer.js
           echo "    const browser = await puppeteer.launch({" >> continuous_visit_puppeteer.js
           echo "      headless: true," >> continuous_visit_puppeteer.js
-          echo "      args: ['--proxy-server=socks5://127.0.0.1:9050', '--no-sandbox', '--disable-setuid-sandbox', '--incognito', '--js-flags=--optimize-for-size --max-old-space-size=4096']" >> continuous_visit_puppeteer.js
+          echo "      args: ['--proxy-server=socks5://127.0.0.1:9050', '--no-sandbox', '--disable-setuid-sandbox', '--incognito']" >> continuous_visit_puppeteer.js
           echo "    });" >> continuous_visit_puppeteer.js
           echo "    const page = await browser.newPage();" >> continuous_visit_puppeteer.js
           echo "    try {" >> continuous_visit_puppeteer.js
@@ -103,6 +107,25 @@ jobs:
           echo "  }" >> continuous_visit_puppeteer.js
           echo "}" >> continuous_visit_puppeteer.js
           
+          # Fetch IP with Tor retry function
+          echo "async function fetchIPWithTorRetry() {" >> continuous_visit_puppeteer.js
+          echo "  const maxRetries = 100;" >> continuous_visit_puppeteer.js
+          echo "  let attempt = 0;" >> continuous_visit_puppeteer.js
+          echo "  while (attempt < maxRetries) {" >> continuous_visit_puppeteer.js
+          echo "    const ip = await fetchIP(true);" >> continuous_visit_puppeteer.js
+          echo "    if (ip) {" >> continuous_visit_puppeteer.js
+          echo "      console.log('Successfully fetched IP with Tor:', ip);" >> continuous_visit_puppeteer.js
+          echo "      return ip;" >> continuous_visit_puppeteer.js
+          echo "    }" >> continuous_visit_puppeteer.js
+          echo "    attempt++;" >> continuous_visit_puppeteer.js
+          echo "    console.log('Retrying to fetch IP with Tor, attempt', attempt);" >> continuous_visit_puppeteer.js
+          echo "    await restartTor();" >> continuous_visit_puppeteer.js
+          echo "  }" >> continuous_visit_puppeteer.js
+          echo "  console.error('Failed to fetch IP with Tor after 100 attempts');" >> continuous_visit_puppeteer.js
+          echo "  return null;" >> continuous_visit_puppeteer.js
+          echo "}" >> continuous_visit_puppeteer.js
+
+          # Fetch IPs and visit websites function
           echo "async function fetchIPsAndVisit() {" >> continuous_visit_puppeteer.js
           echo "  const endTime = Date.now() + 5 * 60 * 60 * 1000;" >> continuous_visit_puppeteer.js
           echo "  await fetchIP(false);" >> continuous_visit_puppeteer.js
@@ -110,13 +133,13 @@ jobs:
           echo "  while (Date.now() < endTime) {" >> continuous_visit_puppeteer.js
           echo "    execSync('sudo service tor start');" >> continuous_visit_puppeteer.js
           echo "    console.log('Tor started before visiting the website.');" >> continuous_visit_puppeteer.js
-          echo "    await fetchIP(true);" >> continuous_visit_puppeteer.js
           echo "    await visitWebsite('https://dileepa11.netlify.app');" >> continuous_visit_puppeteer.js
-          echo "    await randomWait();" >> continuous_visit_puppeteer.js
+          echo "    await new Promise(resolve => setTimeout(resolve, randomVisitDuration()));" >> continuous_visit_puppeteer.js
           echo "  }" >> continuous_visit_puppeteer.js
           echo "  console.log('Completed 5-hour cycle, stopping now.');" >> continuous_visit_puppeteer.js
           echo "}" >> continuous_visit_puppeteer.js
           
+          # Invoke the main function
           echo "fetchIPsAndVisit();" >> continuous_visit_puppeteer.js
 
       - name: Run Puppeteer Script
