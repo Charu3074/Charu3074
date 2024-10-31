@@ -11,13 +11,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        instance: [1, 2, 3, 4, 5, 6, 7, 8]  # Run 8 instances in parallel
+        instance: [1, 2, 3, 4, 5]
 
     steps:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '22'
 
       - name: Set up Tor
         run: |
