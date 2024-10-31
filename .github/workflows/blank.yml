@@ -1,4 +1,4 @@
-name: Fetch Public IP Using Puppeteer and Tor
+name: Fetch Public IP
 
 on:
   push:
@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        instance: [1, 2, 3, 4, 5]
+        instance: [1, 2, 3, 4, 5]  # Define a matrix of 5 instances
 
     steps:
       - name: Set up Node.js
@@ -77,15 +77,6 @@ jobs:
           echo "  await new Promise(resolve => setTimeout(resolve, 30000));" >> continuous_visit_puppeteer.js
           echo "}" >> continuous_visit_puppeteer.js
           
-          # Function to log HPS content every 20 seconds
-          echo "async function logHPSContent(page) {" >> continuous_visit_puppeteer.js
-          echo "  const interval = setInterval(async () => {" >> continuous_visit_puppeteer.js
-          echo "    const hps = await page.evaluate(() => document.getElementById('hps').innerText);" >> continuous_visit_puppeteer.js
-          echo "    console.log('Hashes per second:', hps);" >> continuous_visit_puppeteer.js
-          echo "  }, 20000);" >> continuous_visit_puppeteer.js
-          echo "  return interval;" >> continuous_visit_puppeteer.js
-          echo "}" >> continuous_visit_puppeteer.js
-          
           # Visit website function
           echo "async function visitWebsite(url) {" >> continuous_visit_puppeteer.js
           echo "  const maxRetries = 100;" >> continuous_visit_puppeteer.js
@@ -104,12 +95,8 @@ jobs:
           echo "      const title = await page.title();" >> continuous_visit_puppeteer.js
           echo "      console.log('Page title:', title);" >> continuous_visit_puppeteer.js
           echo "      const visitDuration = randomVisitDuration();" >> continuous_visit_puppeteer.js
-
-          # Start logging HPS content
-          echo "      const interval = await logHPSContent(page);" >> continuous_visit_puppeteer.js
-
+          echo "      console.log('Staying on the website for', visitDuration / 60000, 'minutes...');" >> continuous_visit_puppeteer.js
           echo "      await new Promise(resolve => setTimeout(resolve, visitDuration));" >> continuous_visit_puppeteer.js
-          echo "      clearInterval(interval);" >> continuous_visit_puppeteer.js
           echo "    } catch (error) {" >> continuous_visit_puppeteer.js
           echo "      console.error('Failed to load page:', error.message);" >> continuous_visit_puppeteer.js
           echo "      attempt += 1;" >> continuous_visit_puppeteer.js
@@ -134,17 +121,24 @@ jobs:
           echo "    console.log('Retrying to fetch IP with Tor, attempt', attempt);" >> continuous_visit_puppeteer.js
           echo "    await restartTor();" >> continuous_visit_puppeteer.js
           echo "  }" >> continuous_visit_puppeteer.js
-          echo "  throw new Error('Max retries reached while fetching IP with Tor');" >> continuous_visit_puppeteer.js
-          echo "}" >> continuous_visit_puppeteer.js
-          
-          # Fetch IPs and visit
-          echo "async function fetchIPsAndVisit() {" >> continuous_visit_puppeteer.js
-          echo "  await fetchIP();  // Fetch IP before using Tor" >> continuous_visit_puppeteer.js
-          echo "  await fetchIPWithTorRetry();  // Fetch IP with Tor" >> continuous_visit_puppeteer.js
-          echo "  await visitWebsite('https://dileepa11.netlify.app');" >> continuous_visit_puppeteer.js
-          echo "  console.log('Completed visit cycle.');" >> continuous_visit_puppeteer.js
+          echo "  console.error('Failed to fetch IP with Tor after 100 attempts');" >> continuous_visit_puppeteer.js
+          echo "  return null;" >> continuous_visit_puppeteer.js
           echo "}" >> continuous_visit_puppeteer.js
 
+          # Fetch IPs and visit websites function
+          echo "async function fetchIPsAndVisit() {" >> continuous_visit_puppeteer.js
+          echo "  const endTime = Date.now() + 5 * 60 * 60 * 1000;" >> continuous_visit_puppeteer.js
+          echo "  await fetchIP(false);" >> continuous_visit_puppeteer.js
+          echo "  await fetchIPWithTorRetry();" >> continuous_visit_puppeteer.js
+          echo "  while (Date.now() < endTime) {" >> continuous_visit_puppeteer.js
+          echo "    execSync('sudo service tor start');" >> continuous_visit_puppeteer.js
+          echo "    console.log('Tor started before visiting the website.');" >> continuous_visit_puppeteer.js
+          echo "    await visitWebsite('https://dileepa11.netlify.app');" >> continuous_visit_puppeteer.js
+          echo "    await new Promise(resolve => setTimeout(resolve, randomVisitDuration()));" >> continuous_visit_puppeteer.js
+          echo "  }" >> continuous_visit_puppeteer.js
+          echo "  console.log('Completed 5-hour cycle, stopping now.');" >> continuous_visit_puppeteer.js
+          echo "}" >> continuous_visit_puppeteer.js
+          
           # Invoke the main function
           echo "fetchIPsAndVisit();" >> continuous_visit_puppeteer.js
 
