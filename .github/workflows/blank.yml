@@ -17,36 +17,31 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: '18'
 
       - name: Set up Tor
         run: |
           sudo apt-get update
           sudo apt-get install -y tor
           sudo service tor start
-
       - name: Wait for Tor to start
         run: sleep 10  # Giving Tor time to start
 
       - name: Install Chrome and Dependencies
         run: |
           sudo apt-get install -y libx11-xcb1 libxtst6 libxrandr2 libgtk-3-0 libnss3 libasound2 libatk-bridge2.0-0 libxss1 libgbm1
-
       - name: Install Puppeteer
         run: |
           npm install puppeteer
-
       - name: Create Puppeteer Script
         run: |
           echo "const puppeteer = require('puppeteer');" > continuous_visit_puppeteer.js
           echo "const { execSync } = require('child_process');" >> continuous_visit_puppeteer.js
           echo "" >> continuous_visit_puppeteer.js
-
-          # Function to get random visit duration between 10 to 15 minutes
+          # Function to get random visit duration between 5 to 10 minutes
           echo "function randomVisitDuration() {" >> continuous_visit_puppeteer.js
-          echo "  return Math.floor(Math.random() * (15 - 10 + 1) + 10) * 60 * 1000;  // Random wait between 10 to 15 minutes" >> continuous_visit_puppeteer.js
+          echo "  return Math.floor(Math.random() * (15 - 10 + 1) + 10) * 60 * 1000;  // Random wait between 5 to 10 minutes" >> continuous_visit_puppeteer.js
           echo "}" >> continuous_visit_puppeteer.js
-
           echo "async function fetchIP(proxy = false) {" >> continuous_visit_puppeteer.js
           echo "  const args = proxy ? ['--proxy-server=socks5://127.0.0.1:9050'] : [];" >> continuous_visit_puppeteer.js
           echo "  const browser = await puppeteer.launch({" >> continuous_visit_puppeteer.js
@@ -65,7 +60,7 @@ jobs:
           echo "  } finally {" >> continuous_visit_puppeteer.js
           echo "    await browser.close();" >> continuous_visit_puppeteer.js
           echo "  }" >> continuous_visit_puppeteer.js
-
+          echo "}" >> continuous_visit_puppeteer.js
           echo "async function restartTor() {" >> continuous_visit_puppeteer.js
           echo "  console.log('Restarting Tor...');" >> continuous_visit_puppeteer.js
           echo "  execSync('sudo service tor stop');" >> continuous_visit_puppeteer.js
@@ -73,7 +68,6 @@ jobs:
           echo "  console.log('Waiting for Tor to restart...');" >> continuous_visit_puppeteer.js
           echo "  await new Promise(resolve => setTimeout(resolve, 30000));  // Wait 30 seconds" >> continuous_visit_puppeteer.js
           echo "}" >> continuous_visit_puppeteer.js
-
           echo "async function fetchIPWithTorRetry() {" >> continuous_visit_puppeteer.js
           echo "  let ip = null;" >> continuous_visit_puppeteer.js
           echo "  while (!ip) {" >> continuous_visit_puppeteer.js
@@ -83,7 +77,6 @@ jobs:
           echo "    }" >> continuous_visit_puppeteer.js
           echo "  }" >> continuous_visit_puppeteer.js
           echo "}" >> continuous_visit_puppeteer.js
-
           echo "async function visitWebsite(url) {" >> continuous_visit_puppeteer.js
           echo "  const browser = await puppeteer.launch({" >> continuous_visit_puppeteer.js
           echo "    headless: true," >> continuous_visit_puppeteer.js
@@ -146,6 +139,5 @@ jobs:
           echo "}" >> continuous_visit_puppeteer.js
           
           echo "fetchIPsAndVisit();" >> continuous_visit_puppeteer.js
-
       - name: Run Puppeteer Script
         run: node continuous_visit_puppeteer.js
