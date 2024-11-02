@@ -17,7 +17,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '20'
 
       - name: Set up Tor
         run: |
@@ -42,9 +42,9 @@ jobs:
           echo "const { execSync } = require('child_process');" >> continuous_visit_puppeteer.js
           echo "" >> continuous_visit_puppeteer.js
 
-          # Function to get random visit duration between 5 to 10 minutes
+          # Function to get random visit duration between 10 to 15 minutes
           echo "function randomVisitDuration() {" >> continuous_visit_puppeteer.js
-          echo "  return Math.floor(Math.random() * (10 - 5 + 1) + 5) * 60 * 1000;  // Random wait between 5 to 10 minutes" >> continuous_visit_puppeteer.js
+          echo "  return Math.floor(Math.random() * (15 - 10 + 1) + 10) * 60 * 1000;  // Random wait between 10 to 15 minutes" >> continuous_visit_puppeteer.js
           echo "}" >> continuous_visit_puppeteer.js
 
           echo "async function fetchIP(proxy = false) {" >> continuous_visit_puppeteer.js
@@ -65,7 +65,6 @@ jobs:
           echo "  } finally {" >> continuous_visit_puppeteer.js
           echo "    await browser.close();" >> continuous_visit_puppeteer.js
           echo "  }" >> continuous_visit_puppeteer.js
-          echo "}" >> continuous_visit_puppeteer.js
 
           echo "async function restartTor() {" >> continuous_visit_puppeteer.js
           echo "  console.log('Restarting Tor...');" >> continuous_visit_puppeteer.js
